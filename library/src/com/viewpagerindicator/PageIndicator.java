@@ -47,7 +47,7 @@ public interface PageIndicator extends ViewPager.OnPageChangeListener {
      *
      * @param item
      */
-    public void setCurrentItem(int item);
+    public void setCurrentItem(int item, boolean smoothScroll);
 
     /**
      * Set a page change listener which will receive forwarded events.
