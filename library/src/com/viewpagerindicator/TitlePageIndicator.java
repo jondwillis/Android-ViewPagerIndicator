@@ -595,19 +595,19 @@ public class TitlePageIndicator extends View implements PageIndicator {
     }
 
 
-	public void setCurrentItem(int item) {
-		setCurrentItem(item, false);
-	}
+    public void setCurrentItem(int item) {
+        setCurrentItem(item, false);
+    }
 
-	@Override
-	public void setCurrentItem(int item, boolean smoothScroll) {
-		if (mViewPager == null) {
-			throw new IllegalStateException("ViewPager has not been bound.");
-		}
-		mViewPager.setCurrentItem(item, smoothScroll);
-		mCurrentPage = item;
-		invalidate();
-	}
+    @Override
+    public void setCurrentItem(int item, boolean smoothScroll) {
+        if (mViewPager == null) {
+            throw new IllegalStateException("ViewPager has not been bound.");
+        }
+        mViewPager.setCurrentItem(item, smoothScroll);
+        mCurrentPage = item;
+        invalidate();
+    }
 
     @Override
     public void onPageScrollStateChanged(int state) {
