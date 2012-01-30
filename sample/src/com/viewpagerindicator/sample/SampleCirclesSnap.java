@@ -3,7 +3,7 @@ package com.viewpagerindicator.sample;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import com.viewpagerindicator.CirclePageIndicator;
-import com.viewpagerindicator.R;
+import com.viewpagerindicator.sample.R;
 
 public class SampleCirclesSnap extends BaseSampleActivity {
 	@Override
@@ -17,6 +17,7 @@ public class SampleCirclesSnap extends BaseSampleActivity {
 		mPager.setAdapter(mAdapter);
 		
 		CirclePageIndicator indicator = (CirclePageIndicator)findViewById(R.id.indicator);
+		mIndicator = indicator;
 		indicator.setViewPager(mPager);
 		indicator.setSnap(true);
 	}

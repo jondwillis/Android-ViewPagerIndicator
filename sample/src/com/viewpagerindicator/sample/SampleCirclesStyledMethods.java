@@ -3,7 +3,7 @@ package com.viewpagerindicator.sample;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import com.viewpagerindicator.CirclePageIndicator;
-import com.viewpagerindicator.R;
+import com.viewpagerindicator.sample.R;
 
 public class SampleCirclesStyledMethods extends BaseSampleActivity {
 	@Override
@@ -17,11 +17,13 @@ public class SampleCirclesStyledMethods extends BaseSampleActivity {
 		mPager.setAdapter(mAdapter);
 		
 		CirclePageIndicator indicator = (CirclePageIndicator)findViewById(R.id.indicator);
+		mIndicator = indicator;
 		indicator.setViewPager(mPager);
 		
 		final float density = getResources().getDisplayMetrics().density;
 		indicator.setBackgroundColor(0xFFCCCCCC);
 		indicator.setRadius(10 * density);
+        indicator.setPageColor(0x880000FF);
 		indicator.setFillColor(0xFF888888);
 		indicator.setStrokeColor(0xFF000000);
 		indicator.setStrokeWidth(2 * density);

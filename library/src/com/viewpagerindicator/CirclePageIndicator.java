@@ -41,6 +41,7 @@ public class CirclePageIndicator extends View implements PageIndicator {
     public static final int VERTICAL = 1;
 
     private float mRadius;
+    private final Paint mPaintPageFill;
     private final Paint mPaintStroke;
     private final Paint mPaintFill;
     private ViewPager mViewPager;
@@ -74,30 +75,23 @@ public class CirclePageIndicator extends View implements PageIndicator {
 
         // Load defaults from resources
         final Resources res = getResources();
-        final int defaultFillColor = res
-                .getColor(R.color.default_circle_indicator_fill_color);
-        final int defaultOrientation = res
-                .getInteger(R.integer.default_circle_indicator_orientation);
-        final int defaultStrokeColor = res
-                .getColor(R.color.default_circle_indicator_stroke_color);
-        final float defaultStrokeWidth = res
-                .getDimension(R.dimen.default_circle_indicator_stroke_width);
-        final float defaultRadius = res
-                .getDimension(R.dimen.default_circle_indicator_radius);
-        final boolean defaultCentered = res
-                .getBoolean(R.bool.default_circle_indicator_centered);
-        final boolean defaultSnap = res
-                .getBoolean(R.bool.default_circle_indicator_snap);
+        final int defaultPageColor = res.getColor(R.color.default_circle_indicator_page_color);
+        final int defaultFillColor = res.getColor(R.color.default_circle_indicator_fill_color);
+        final int defaultOrientation = res.getInteger(R.integer.default_circle_indicator_orientation);
+        final int defaultStrokeColor = res.getColor(R.color.default_circle_indicator_stroke_color);
+        final float defaultStrokeWidth = res.getDimension(R.dimen.default_circle_indicator_stroke_width);
+        final float defaultRadius = res.getDimension(R.dimen.default_circle_indicator_radius);
+        final boolean defaultCentered = res.getBoolean(R.bool.default_circle_indicator_centered);
+        final boolean defaultSnap = res.getBoolean(R.bool.default_circle_indicator_snap);
 
-        // Retrieve styles attributes
-        TypedArray a = context.obtainStyledAttributes(attrs,
-                R.styleable.CirclePageIndicator, defStyle,
-                R.style.Widget_CirclePageIndicator);
+        //Retrieve styles attributes
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CirclePageIndicator, defStyle, R.style.Widget_CirclePageIndicator);
 
-        mCentered = a.getBoolean(R.styleable.CirclePageIndicator_centered,
-                defaultCentered);
-        mOrientation = a.getInt(R.styleable.CirclePageIndicator_orientation,
-                defaultOrientation);
+        mCentered = a.getBoolean(R.styleable.CirclePageIndicator_centered, defaultCentered);
+        mOrientation = a.getInt(R.styleable.CirclePageIndicator_orientation, defaultOrientation);
+        mPaintPageFill = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaintPageFill.setStyle(Style.FILL);
+        mPaintPageFill.setColor(a.getColor(R.styleable.CirclePageIndicator_pageColor, defaultPageColor));
         mPaintStroke = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaintStroke.setStyle(Style.STROKE);
         mPaintStroke.setColor(a
@@ -128,6 +122,15 @@ public class CirclePageIndicator extends View implements PageIndicator {
 
     public boolean isCentered() {
         return mCentered;
+    }
+
+    public void setPageColor(int pageColor) {
+        mPaintPageFill.setColor(pageColor);
+        invalidate();
+    }
+
+    public int getPageColor() {
+        return mPaintPageFill.getColor();
     }
 
     public void setFillColor(int fillColor) {
@@ -203,6 +206,19 @@ public class CirclePageIndicator extends View implements PageIndicator {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if (mViewPager == null) {
+            return;
+        }
+        final int count = mViewPager.getAdapter().getCount();
+        if (count == 0) {
+            return;
+        }
+
+        if (mCurrentPage >= count) {
+            setCurrentItem(count - 1);
+            return;
+        }
+
         int longSize;
         int longPaddingBefore;
         int longPaddingAfter;
@@ -219,7 +235,6 @@ public class CirclePageIndicator extends View implements PageIndicator {
             shortPaddingBefore = getPaddingLeft();
         }
 
-        final int count = mViewPager.getAdapter().getCount();
         final float threeRadius = mRadius * 3;
         final float shortOffset = shortPaddingBefore + mRadius;
         float longOffset = longPaddingBefore + mRadius;
@@ -231,7 +246,12 @@ public class CirclePageIndicator extends View implements PageIndicator {
         float dX;
         float dY;
 
-        // Draw stroked circles
+        float pageFillRadius = mRadius;
+        if (mPaintStroke.getStrokeWidth() > 0) {
+            pageFillRadius -= mPaintStroke.getStrokeWidth() / 2.0f;
+        }
+
+        //Draw stroked circles
         for (int iLoop = 0; iLoop < count; iLoop++) {
             float drawLong = longOffset + (iLoop * threeRadius);
             if (mOrientation == HORIZONTAL) {
@@ -241,7 +261,15 @@ public class CirclePageIndicator extends View implements PageIndicator {
                 dX = shortOffset;
                 dY = drawLong;
             }
-            canvas.drawCircle(dX, dY, mRadius, mPaintStroke);
+            // Only paint fill if not completely transparent
+            if (mPaintPageFill.getAlpha() > 0) {
+                canvas.drawCircle(dX, dY, pageFillRadius, mPaintPageFill);
+            }
+
+            // Only paint stroke if a stroke width was non-zero
+            if (pageFillRadius != mRadius) {
+                canvas.drawCircle(dX, dY, mRadius, mPaintStroke);
+            }
         }
 
         // Draw the filled circle according to the current scroll
@@ -260,8 +288,12 @@ public class CirclePageIndicator extends View implements PageIndicator {
     }
 
     public boolean onTouchEvent(android.view.MotionEvent ev) {
-        if (mViewPager == null)
+        if (super.onTouchEvent(ev)) {
+            return true;
+        }
+        if ((mViewPager == null) || (mViewPager.getAdapter().getCount() == 0)) {
             return false;
+        }
 
         final int action = ev.getAction();
 
@@ -385,6 +417,11 @@ public class CirclePageIndicator extends View implements PageIndicator {
     }
 
     @Override
+    public void notifyDataSetChanged() {
+        invalidate();
+    }
+
+    @Override
     public void onPageScrollStateChanged(int state) {
         mScrollState = state;
 
@@ -453,8 +490,8 @@ public class CirclePageIndicator extends View implements PageIndicator {
         int specMode = MeasureSpec.getMode(measureSpec);
         int specSize = MeasureSpec.getSize(measureSpec);
 
-        if (specMode == MeasureSpec.EXACTLY) {
-            // We were told how big to be
+        if ((specMode == MeasureSpec.EXACTLY) || (mViewPager == null)) {
+            //We were told how big to be
             result = specSize;
         } else {
             // Calculate the width according the views count

@@ -1,7 +1,7 @@
 /*
+ * Copyright (C) 2011 Jake Wharton
  * Copyright (C) 2011 Patrik Akerfeldt
  * Copyright (C) 2011 Francisco Figueiredo Jr.
- * Copyright (C) 2011 Jake Wharton
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RectF;
+import android.graphics.Typeface;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.v4.view.MotionEventCompat;
@@ -57,6 +58,18 @@ public class TitlePageIndicator extends View implements PageIndicator {
      */
     private static final float BOLD_FADE_PERCENTAGE = 0.05f;
 
+    /**
+     * Interface for a callback when the center item has been clicked.
+     */
+    public static interface OnCenterItemClickListener {
+        /**
+         * Callback when the center item has been clicked.
+         *
+         * @param position Position of the current center item.
+         */
+        public void onCenterItemClick(int position);
+    }
+
     public enum IndicatorStyle {
         None(0), Triangle(1), Underline(2);
 
@@ -82,14 +95,14 @@ public class TitlePageIndicator extends View implements PageIndicator {
     private int mCurrentPage;
     private int mCurrentOffset;
     private int mScrollState;
-    private final Paint mPaintText;
+    private final Paint mPaintText = new Paint();
     private boolean mBoldText;
     private int mColorText;
     private int mColorSelected;
     private Path mPath;
-    private final Paint mPaintFooterLine;
+    private final Paint mPaintFooterLine = new Paint();
     private IndicatorStyle mFooterIndicatorStyle;
-    private final Paint mPaintFooterIndicator;
+    private final Paint mPaintFooterIndicator = new Paint();
     private float mFooterIndicatorHeight;
     private float mFooterIndicatorUnderlinePadding;
     private float mFooterPadding;
@@ -105,6 +118,8 @@ public class TitlePageIndicator extends View implements PageIndicator {
     private float mLastMotionX = -1;
     private int mActivePointerId = INVALID_POINTER;
     private boolean mIsDragging;
+
+    private OnCenterItemClickListener mCenterItemClickListener;
 
 
     public TitlePageIndicator(Context context) {
@@ -152,14 +167,11 @@ public class TitlePageIndicator extends View implements PageIndicator {
 
         final float textSize = a.getDimension(R.styleable.TitlePageIndicator_textSize, defaultTextSize);
         final int footerColor = a.getColor(R.styleable.TitlePageIndicator_footerColor, defaultFooterColor);
-        mPaintText = new Paint();
         mPaintText.setTextSize(textSize);
         mPaintText.setAntiAlias(true);
-        mPaintFooterLine = new Paint();
         mPaintFooterLine.setStyle(Paint.Style.FILL_AND_STROKE);
         mPaintFooterLine.setStrokeWidth(mFooterLineHeight);
         mPaintFooterLine.setColor(footerColor);
-        mPaintFooterIndicator = new Paint();
         mPaintFooterIndicator.setStyle(Paint.Style.FILL_AND_STROKE);
         mPaintFooterIndicator.setColor(footerColor);
 
@@ -281,6 +293,15 @@ public class TitlePageIndicator extends View implements PageIndicator {
         invalidate();
     }
 
+    public void setTypeface(Typeface typeface) {
+        mPaintText.setTypeface(typeface);
+        invalidate();
+    }
+
+    public Typeface getTypeface() {
+        return mPaintText.getTypeface();
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -290,10 +311,24 @@ public class TitlePageIndicator extends View implements PageIndicator {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if (mViewPager == null) {
+            return;
+        }
+        final int count = mViewPager.getAdapter().getCount();
+        if (count == 0) {
+            return;
+        }
+
         //Calculate views bounds
         ArrayList<RectF> bounds = calculateAllBounds(mPaintText);
+        final int boundsSize = bounds.size();
 
-        final int count = mViewPager.getAdapter().getCount();
+        //Make sure we're on a page that still exists
+        if (mCurrentPage >= boundsSize) {
+            setCurrentItem(boundsSize - 1);
+            return;
+        }
+
         final int countMinusOne = count - 1;
         final float halfWidth = getWidth() / 2f;
         final int left = getLeft();
@@ -367,6 +402,7 @@ public class TitlePageIndicator extends View implements PageIndicator {
         }
 
         //Now draw views
+        int colorTextAlpha = mColorText >>> 24;
         for (int i = 0; i < count; i++) {
             //Get the title
             RectF bound = bounds.get(i);
@@ -378,6 +414,10 @@ public class TitlePageIndicator extends View implements PageIndicator {
 
                 //Draw text as unselected
                 mPaintText.setColor(mColorText);
+                if(currentPage && currentSelected) {
+                    //Fade out/in unselected text as the selected text fades in/out
+                    mPaintText.setAlpha(colorTextAlpha - (int)(colorTextAlpha * selectedPercent));
+                }
                 canvas.drawText(mTitleProvider.getTitle(i), bound.left, bound.bottom + mTopPadding, mPaintText);
 
                 //If we are within the selected bounds draw the selected text
@@ -407,7 +447,7 @@ public class TitlePageIndicator extends View implements PageIndicator {
                 break;
 
             case Underline:
-                if (!currentSelected) {
+                if (!currentSelected || page >= boundsSize) {
                     break;
                 }
 
@@ -427,7 +467,12 @@ public class TitlePageIndicator extends View implements PageIndicator {
     }
 
     public boolean onTouchEvent(android.view.MotionEvent ev) {
-        if (mViewPager == null) return false;
+        if (super.onTouchEvent(ev)) {
+            return true;
+        }
+        if ((mViewPager == null) || (mViewPager.getAdapter().getCount() == 0)) {
+            return false;
+        }
 
         final int action = ev.getAction();
 
@@ -468,13 +513,25 @@ public class TitlePageIndicator extends View implements PageIndicator {
                     final int width = getWidth();
                     final float halfWidth = width / 2f;
                     final float sixthWidth = width / 6f;
+                    final float leftThird = halfWidth - sixthWidth;
+                    final float rightThird = halfWidth + sixthWidth;
+                    final float eventX = ev.getX();
 
-                    if ((mCurrentPage > 0) && (ev.getX() < halfWidth - sixthWidth)) {
-                        mViewPager.setCurrentItem(mCurrentPage - 1);
-                        return true;
-                    } else if ((mCurrentPage < count - 1) && (ev.getX() > halfWidth + sixthWidth)) {
-                        mViewPager.setCurrentItem(mCurrentPage + 1);
-                        return true;
+                    if (eventX < leftThird) {
+                        if (mCurrentPage > 0) {
+                            mViewPager.setCurrentItem(mCurrentPage - 1);
+                            return true;
+                        }
+                    } else if (eventX > rightThird) {
+                        if (mCurrentPage < count - 1) {
+                            mViewPager.setCurrentItem(mCurrentPage + 1);
+                            return true;
+                        }
+                    } else {
+                        //Middle third
+                        if (mCenterItemClickListener != null) {
+                            mCenterItemClickListener.onCenterItemClick(mCurrentPage);
+                        }
                     }
                 }
 
@@ -593,7 +650,19 @@ public class TitlePageIndicator extends View implements PageIndicator {
         setViewPager(view);
         setCurrentItem(initialPosition);
     }
+    @Override
+    public void notifyDataSetChanged() {
+        invalidate();
+    }
 
+    /**
+     * Set a callback listener for the center item click.
+     *
+     * @param listener Callback instance.
+     */
+    public void setOnCenterItemClickListener(OnCenterItemClickListener listener) {
+        mCenterItemClickListener = listener;
+    }
 
     public void setCurrentItem(int item) {
         setCurrentItem(item, false);
@@ -646,60 +715,29 @@ public class TitlePageIndicator extends View implements PageIndicator {
         mListener = listener;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see android.view.View#onMeasure(int, int)
-     */
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        setMeasuredDimension(measureWidth(widthMeasureSpec), measureHeight(heightMeasureSpec));
-    }
+        //Measure our width in whatever mode specified
+        final int measuredWidth = MeasureSpec.getSize(widthMeasureSpec);
 
-    /**
-     * Determines the width of this view
-     *
-     * @param measureSpec
-     *            A measureSpec packed into an int
-     * @return The width of the view, honoring constraints from measureSpec
-     */
-    private int measureWidth(int measureSpec) {
-        int result = 0;
-        int specMode = MeasureSpec.getMode(measureSpec);
-        int specSize = MeasureSpec.getSize(measureSpec);
-
-        if (specMode != MeasureSpec.EXACTLY) {
-            throw new IllegalStateException(getClass().getSimpleName() + " can only be used in EXACTLY mode.");
-        }
-        result = specSize;
-        return result;
-    }
-
-    /**
-     * Determines the height of this view
-     *
-     * @param measureSpec
-     *            A measureSpec packed into an int
-     * @return The height of the view, honoring constraints from measureSpec
-     */
-    private int measureHeight(int measureSpec) {
-        float result = 0;
-        int specMode = MeasureSpec.getMode(measureSpec);
-        int specSize = MeasureSpec.getSize(measureSpec);
-
-        if (specMode == MeasureSpec.EXACTLY) {
+        //Determine our height
+        float height = 0;
+        final int heightSpecMode = MeasureSpec.getMode(heightMeasureSpec);
+        if (heightSpecMode == MeasureSpec.EXACTLY) {
             //We were told how big to be
-            result = specSize;
+            height = MeasureSpec.getSize(heightMeasureSpec);
         } else {
             //Calculate the text bounds
             RectF bounds = new RectF();
             bounds.bottom = mPaintText.descent()-mPaintText.ascent();
-            result = bounds.bottom - bounds.top + mFooterLineHeight + mFooterPadding + mTopPadding;
+            height = bounds.bottom - bounds.top + mFooterLineHeight + mFooterPadding + mTopPadding;
             if (mFooterIndicatorStyle != IndicatorStyle.None) {
-                result += mFooterIndicatorHeight;
+                height += mFooterIndicatorHeight;
             }
         }
-        return (int)result;
+        final int measuredHeight = (int)height;
+
+        setMeasuredDimension(measuredWidth, measuredHeight);
     }
 
     @Override

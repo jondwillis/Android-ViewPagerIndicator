@@ -1,6 +1,47 @@
 Change Log
 ==========
 
+Version 2.2.3 *(2012-01-26)*
+----------------------------
+
+ * Correctly handle removing the last page when it is selected.
+ * Use antialiased text for the title indicators.
+ * New circle fill color for circle indicators.
+
+
+Version 2.2.2 *(2011-12-31)*
+----------------------------
+
+ * Fix incorrect `R.java` imports in all of the sample activities.
+
+
+Version 2.2.1 *(2011-12-31)*
+----------------------------
+
+ * New `setTypeface(Typeface)` and `getTypeface()` methods for title indicator.
+   (Thanks Dimitri Fedorov)
+ * Added styled tab indicator sample.
+ * Support for widths other than those that could be measured exactly.
+
+
+Version 2.2.0 *(2011-12-13)*
+----------------------------
+
+ * Default title indicator style is now 'underline'.
+ * Title indicator now allows specifying an `OnCenterItemClickListener` which
+   will give you callbacks when the current item title has been clicked.
+   (Thanks Chris Banes)
+
+
+Version 2.1.0 *(2011-11-30)*
+----------------------------
+
+ * Indicators now have a `notifyDataSetChanged` method which should be called
+   when changes are made to the adapter.
+ * Fix: Avoid `NullPointerException`s when the `ViewPager` is not immediately
+   bound to the indicator.
+
+
 Version 2.0.0 *(2011-11-20)*
 ----------------------------
 

@@ -6,7 +6,11 @@
 	<groupId>com.viewpagerindicator</groupId>
 	<artifactId>parent</artifactId>
 	<packaging>pom</packaging>
+<<<<<<< HEAD
 	<version>2.0.0-electricsleep</version>
+=======
+	<version>2.2.3</version>
+>>>>>>> f09acb004cb08d93b2c1f26894d9ebc88b91f9c0
 
 	<name>Android-ViewPagerIndicator (Parent)</name>
 	<description>Android library for.</description>
@@ -73,15 +77,17 @@
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
 		<java.version>1.6</java.version>
-		<android.version>1.6_r3</android.version>
+		<android.version>1.6_r2</android.version>
 		<android.platform>4</android.platform>
-		<android.support.version>r4</android.support.version>
+		<android.support.version>r6</android.support.version>
+
+		<android-maven.version>3.0.0</android-maven.version>
 	</properties>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>android</groupId>
+				<groupId>com.google.android</groupId>
 				<artifactId>android</artifactId>
 				<version>${android.version}</version>
 			</dependency>
@@ -123,7 +129,7 @@
 				<plugin>
 					<groupId>com.jayway.maven.plugins.android.generation2</groupId>
 					<artifactId>android-maven-plugin</artifactId>
-					<version>3.0.0-alpha-13</version>
+					<version>${android-maven.version}</version>
 					<configuration>
 						<sdk>
 							<platform>${android.platform}</platform>

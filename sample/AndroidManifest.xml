@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.viewpagerindicator.sample"
-    android:versionCode="10"
-    android:versionName="2.0.0">
+    android:versionCode="30"
+    android:versionName="2.2.3">
 
-    <uses-sdk android:minSdkVersion="4" />
+    <uses-sdk
+        android:minSdkVersion="4"
+        android:targetSdkVersion="15" />
 
     <application
         android:label="ViewPagerIndicator Sample"
@@ -34,14 +36,6 @@
         <activity
             android:name=".SampleCirclesInitialPage"
             android:label="Circles/Initial Page">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="com.jakewharton.android.viewpagerindicator.sample.SAMPLE" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".SampleCirclesOrientation"
-            android:label="Circles/Orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="com.jakewharton.android.viewpagerindicator.sample.SAMPLE" />
@@ -95,6 +89,14 @@
         
         <!-- TITLE INDICATOR -->
         <activity
+            android:name=".SampleTitlesCenterClickListener"
+            android:label="Titles/Center Click Listener">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.jakewharton.android.viewpagerindicator.sample.SAMPLE" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".SampleTitlesDefault"
             android:label="Titles/Default">
             <intent-filter>
@@ -138,8 +140,8 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SampleTitlesUnderline"
-            android:label="Titles/Underline Style">
+            android:name=".SampleTitlesTriangle"
+            android:label="Titles/Triangle Style">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="com.jakewharton.android.viewpagerindicator.sample.SAMPLE" />
@@ -161,6 +163,15 @@
             android:name=".SampleTabsDefault"
             android:label="Tabs/Default"
             android:theme="@style/Theme.PageIndicatorDefaults">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="com.jakewharton.android.viewpagerindicator.sample.SAMPLE" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".SampleTabsStyled"
+            android:label="Tabs/Styled"
+            android:theme="@style/StyledIndicators">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="com.jakewharton.android.viewpagerindicator.sample.SAMPLE" />

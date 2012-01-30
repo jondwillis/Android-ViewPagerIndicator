@@ -3,7 +3,7 @@ package com.viewpagerindicator.sample;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 
-import com.viewpagerindicator.R;
+import com.viewpagerindicator.sample.R;
 import com.viewpagerindicator.TitlePageIndicator;
 
 public class SampleTitlesDefault extends BaseSampleActivity {
@@ -17,7 +17,7 @@ public class SampleTitlesDefault extends BaseSampleActivity {
 		mPager = (ViewPager)findViewById(R.id.pager);
 		mPager.setAdapter(mAdapter);
 		
-		TitlePageIndicator indicator = (TitlePageIndicator)findViewById(R.id.indicator);
-		indicator.setViewPager(mPager);
+		mIndicator = (TitlePageIndicator)findViewById(R.id.indicator);
+		mIndicator.setViewPager(mPager);
 	}
 }
